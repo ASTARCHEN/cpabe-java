@@ -12,15 +12,16 @@ import java.util.List;
 
 import javax.crypto.Cipher;
 
-import cn.edu.pku.ss.crypto.abe.serialize.SerializeUtils;
-import cn.edu.pku.ss.crypto.aes.AES;
-
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 
+import cn.com.wasec.SM4Engine;
+import cn.com.wasec.impl.ISymmetricEncryption;
+import cn.edu.pku.ss.crypto.abe.serialize.SerializeUtils;
+import cn.edu.pku.ss.crypto.aes.AES;
 import it.unisa.dia.gas.jpbc.Element;
 import it.unisa.dia.gas.jpbc.Pairing;
-
+import ltd.snowland.utils.StreamTool;
 public class CPABEImplWithoutSerialize {
 	static Pairing pairing = PairingManager.defaultPairing;
 	public static class KeyPair{
@@ -85,14 +86,29 @@ public class CPABEImplWithoutSerialize {
 		return JSON.toJSONString(json);
 	}
 	
-	public static void enc(File file, Policy p, PublicKey PK, String outputFileName){
+	public static void enc(File file, Policy p, PublicKey PK, String outputFileName, String algorithm){
+		ISymmetricEncryption engine = null;
+		switch(algorithm) {
+		case "AES": 
+			 engine = new AES();
+			break;
+		case "SM4":
+			engine = new SM4Engine();
+			break;
+		default:
+			engine = new SM4Engine();
+			break;
+		}
+		enc(file, p, PK, outputFileName, engine);
+	}
+	public static void enc(File file, Policy p, PublicKey PK, String outputFileName, ISymmetricEncryption engine){
 		File ciphertextFile = createNewFile(outputFileName);
 		Element m = PairingManager.defaultPairing.getGT().newRandomElement();
 		Element s = pairing.getZr().newElement().setToRandom();
 		fill_policy(p, s, PK);
 		Ciphertext ciphertext = new Ciphertext();
 		ciphertext.p = p;
-		//´Ë´¦m.duplicate()ÊÇÎªÁËºóÃæAES¼ÓÃÜÖÐ»¹ÐèÒªÓÃµ½m
+		//ï¿½Ë´ï¿½m.duplicate()ï¿½ï¿½Îªï¿½Ëºï¿½ï¿½ï¿½AESï¿½ï¿½ï¿½ï¿½ï¿½Ð»ï¿½ï¿½ï¿½Òªï¿½Ãµï¿½m
 		ciphertext.Cs = m.duplicate().mul(PK.g_hat_alpha.duplicate().powZn(s));
 		ciphertext.C = PK.h.duplicate().powZn(s); 
 		
@@ -102,7 +118,7 @@ public class CPABEImplWithoutSerialize {
 		try {
 			fis = new FileInputStream(file);
 			fos = new FileOutputStream(ciphertextFile, true);
-			AES.crypto(Cipher.ENCRYPT_MODE, fis, fos, m);
+			engine.crypto(Cipher.ENCRYPT_MODE, fis, fos, m);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}finally{
@@ -114,7 +130,9 @@ public class CPABEImplWithoutSerialize {
 			}
 		}
 	}
-	
+	public static void enc(File file, Policy p, PublicKey PK, String outputFileName){
+		enc(file, p, PK, outputFileName, "SM4");
+	}
 	public static Element dec(Ciphertext ciphertext, SecretKey SK, PublicKey PK){
 		check_sat(SK, ciphertext.p);
 		if(ciphertext.p.satisfiable != 1){
@@ -131,7 +149,7 @@ public class CPABEImplWithoutSerialize {
 		return m;
 	}
 	
-	public static File createNewFile(String fileName){
+	public static File createNewFile(String fileName) {
 		File file = new File(fileName);
 		if(!file.exists()){
 			try {
@@ -152,6 +170,7 @@ public class CPABEImplWithoutSerialize {
 		}
 		return file;
 	}
+
 	
 	private static Element dec_flatten(Policy p, SecretKey SK){
 		Element r = pairing.getGT().newElement().setToOne();
@@ -191,7 +210,7 @@ public class CPABEImplWithoutSerialize {
 		
 		for(i=0; i<p.satl.size(); i++){
 			t = lagrange_coef(p.satl, p.satl.get(i), zero);
-			expnew = exp.duplicate().mul(t);    //×¢ÒâÕâÀïµÄduplicate
+			expnew = exp.duplicate().mul(t);    //×¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½duplicate
 			dec_node_flatten(r, expnew, p.children[p.satl.get(i)-1], SK);
 		}
 	}
@@ -321,7 +340,7 @@ public class CPABEImplWithoutSerialize {
 			if(j == i){
 				continue;
 			}
-			t = x.duplicate().sub(pairing.getZr().newElement().set(j));   //×¢ÒâÕâÀïµÄduplicate
+			t = x.duplicate().sub(pairing.getZr().newElement().set(j));   //×¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½duplicate
 			r.mul(t);
 			t.set(i-j).invert();
 			r.mul(t);

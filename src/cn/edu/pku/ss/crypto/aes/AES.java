@@ -1,6 +1,7 @@
 package cn.edu.pku.ss.crypto.aes;
 
 import it.unisa.dia.gas.jpbc.Element;
+import ltd.snowland.utils.StreamTool;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -20,9 +21,10 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 import cn.edu.pku.ss.crypto.abe.PairingManager;
-
-public class AES {
+import cn.com.wasec.impl.*;
+public class AES implements ISymmetricEncryption{
 	public static void main(String[] args) throws IOException {
+		AES engine = new AES();
 		File f = new File("README.md");
 		File enc_out = new File("enc_out");
 		if(!enc_out.exists()){
@@ -35,17 +37,17 @@ public class AES {
 		Element e = PairingManager.defaultPairing.getGT().newRandomElement();
 		InputStream is = new FileInputStream(f);
 		OutputStream os = new FileOutputStream(enc_out);
-		crypto(Cipher.ENCRYPT_MODE, is, os, e);
+		engine.crypto(Cipher.ENCRYPT_MODE, is, os, e);
 		is.close();
 		os.close();
 		is = new FileInputStream(enc_out);
 		os = new FileOutputStream(dec_out);
-		crypto(Cipher.DECRYPT_MODE, is, os, e);
+		engine.crypto(Cipher.DECRYPT_MODE, is, os, e);
 	}
-	public static void crypto(int mode, InputStream is, OutputStream os, Element e){
+	public void crypto(int mode, InputStream is, OutputStream os, Element e){
 		try {
 			Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-			SecretKey secKey = generateSecretKeyFromElement(e);
+			SecretKey secKey = this.generateSecretKeyFromElement(e);
 			cipher.init(mode, secKey);
 			
 			CipherOutputStream cos = new CipherOutputStream(os, cipher);
@@ -66,7 +68,7 @@ public class AES {
 		}
 	}
 
-	private static SecretKey generateSecretKeyFromElement(Element e) {
+	private SecretKey generateSecretKeyFromElement(Element e) {
 		System.out.println("e:" + e);
 		byte[] b = e.toBytes();
 		b = Arrays.copyOf(b, 16);

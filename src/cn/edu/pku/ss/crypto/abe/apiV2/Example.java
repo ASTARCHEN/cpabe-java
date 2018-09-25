@@ -5,34 +5,43 @@ import java.io.File;
 public class Example {
 	public static void main(String[] args) {
 		Server server = new Server();
-		Client PKUClient = new Client(new String[]{"PKU", "Student"});
-		Client THUClient = new Client(new String[]{"THU", "Student"});
-		Client TeacherClient = new Client(new String[]{"PKU", "Teacher"});
-		//client´Óserver´¦»ñÈ¡¹«Ô¿×Ö·û´®
+		Client PKUClient = new Client(new String[] { "PKU", "Student" });
+		Client THUClient = new Client(new String[] { "THU", "Student" });
+		Client TeacherClient = new Client(new String[] { "PKU", "Teacher" });
+		// clientï¿½ï¿½serverï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½Ô¿ï¿½Ö·ï¿½ï¿½ï¿½
 		String PKJSONString = server.getPublicKeyInString();
 		PKUClient.setPK(PKJSONString);
 		THUClient.setPK(PKJSONString);
 		TeacherClient.setPK(PKJSONString);
 
-		//client½«×Ô¼ºµÄÊôÐÔÐÅÏ¢·¢ËÍ¸øserver,²¢»ñÈ¡Ë½Ô¿×Ö·û´®
+		// clientï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½Í¸ï¿½server,ï¿½ï¿½ï¿½ï¿½È¡Ë½Ô¿ï¿½Ö·ï¿½ï¿½ï¿½
 		String SKJSONString = server.generateSecretKey(PKUClient.getAttrs());
 		PKUClient.setSK(SKJSONString);
-		
+
 		SKJSONString = server.generateSecretKey(THUClient.getAttrs());
 		THUClient.setSK(SKJSONString);
-		
+
 		SKJSONString = server.generateSecretKey(TeacherClient.getAttrs());
 		TeacherClient.setSK(SKJSONString);
-		
-		//¼ÓÃÜ
+
+		// ï¿½ï¿½ï¿½ï¿½
 		String outputFileName = "test.cpabe";
 		File in = new File("README.md");
-		String policy = "Student OR Teacher";
+		String policy = "Student"; // Student OR Teacher
 		PKUClient.enc(in, policy, outputFileName);
-		
-		//½âÃÜ
+
+		// ï¿½ï¿½ï¿½ï¿½
 		in = new File(outputFileName);
-//		THUClient.dec(in);
-		TeacherClient.dec(in);
+		// THUClient.dec(in);
+//		try {
+//			TeacherClient.dec(in);
+//		} catch (Exception e) {
+//			System.out.println("ERROR");
+//		}
+		try {
+			THUClient.dec(in);
+		} catch (Exception e) {
+			System.out.println("ERROR");
+		}
 	}
 }

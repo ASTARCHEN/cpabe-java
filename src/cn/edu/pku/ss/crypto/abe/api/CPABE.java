@@ -1,7 +1,5 @@
 package cn.edu.pku.ss.crypto.abe.api;
 
-import it.unisa.dia.gas.jpbc.Element;
-
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -12,6 +10,8 @@ import java.io.OutputStream;
 
 import javax.crypto.Cipher;
 
+import cn.com.wasec.SM4Engine;
+import cn.com.wasec.impl.ISymmetricEncryption;
 import cn.edu.pku.ss.crypto.abe.CPABEImpl;
 import cn.edu.pku.ss.crypto.abe.Ciphertext;
 import cn.edu.pku.ss.crypto.abe.MasterKey;
@@ -21,6 +21,7 @@ import cn.edu.pku.ss.crypto.abe.PublicKey;
 import cn.edu.pku.ss.crypto.abe.SecretKey;
 import cn.edu.pku.ss.crypto.abe.serialize.SerializeUtils;
 import cn.edu.pku.ss.crypto.aes.AES;
+import it.unisa.dia.gas.jpbc.Element;
 
 public class CPABE {
 	public static final String Default_PKFileName = "PublicKey";
@@ -43,8 +44,8 @@ public class CPABE {
 		String PKFileName = "PKFile";
 		String MKFileName = "MKFile";
 		String SKFileName = "SKFile";
-		String policy = "2 of (±±¾©´óÑ§,Èí¼þÑ§Ôº,ÑÐ¾¿Éú)";
-		String[] attrs = new String[]{"±±¾©´óÑ§", "Èí¼þÑ§Ôº"};
+		String policy = "2 of (ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ§,ï¿½ï¿½ï¿½Ñ§Ôº,ï¿½Ð¾ï¿½ï¿½ï¿½)";
+		String[] attrs = new String[]{"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ§", "ï¿½ï¿½ï¿½Ñ§Ôº"};
 		setup(PKFileName, MKFileName);
 		enc(encFileName, policy, ciphertextFileName, PKFileName);
 		keygen(attrs, PKFileName, MKFileName, SKFileName);
@@ -71,7 +72,7 @@ public class CPABE {
 			err(Error_EncFile_Missing);
 			return;
 		}
-		File encFile = new File(encFileName);
+		File encFile = new File(encFileName, "rb");
 		if(!encFile.exists()){
 			err(Error_EncFile_Missing);
 			return;
@@ -130,8 +131,26 @@ public class CPABE {
 		MasterKey MK = SerializeUtils.unserialize(MasterKey.class, new File(MKFileName));
 		CPABEImpl.keygen(attrs, PK, MK, SKFileName);
 	}
-	
 	public static void dec(String ciphertextFileName, String PKFileName, String SKFileName){
+		dec(ciphertextFileName, PKFileName, SKFileName, "SM4");
+	}
+	public static void dec(String ciphertextFileName, String PKFileName, String SKFileName, String algorithm){
+		ISymmetricEncryption engine = null;
+		switch(algorithm) {
+		case "AES": 
+			 engine = new AES();
+			break;
+		case "SM4":
+			engine = new SM4Engine();
+			break;
+		default:
+			engine = new SM4Engine();
+			break;
+		}
+		dec(ciphertextFileName, PKFileName, SKFileName, engine);
+	}
+	
+	public static void dec(String ciphertextFileName, String PKFileName, String SKFileName, ISymmetricEncryption engine){
 		if(isEmptyString(ciphertextFileName)){
 			err(Error_Ciphertext_Missing);
 			return;
@@ -184,7 +203,7 @@ public class CPABE {
 			e.printStackTrace();
 		}
 		Element m = CPABEImpl.dec(ciphertext, SK, PK);
-		AES.crypto(Cipher.DECRYPT_MODE, dis, os, m);
+		engine.crypto(Cipher.DECRYPT_MODE, dis, os, m);
 	}
 	
 }

@@ -1,7 +1,5 @@
 package cn.edu.pku.ss.crypto.abe.apiV2;
 
-import it.unisa.dia.gas.jpbc.Element;
-
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -12,6 +10,11 @@ import java.io.OutputStream;
 
 import javax.crypto.Cipher;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+
+import cn.com.wasec.SM4Engine;
+import cn.com.wasec.impl.ISymmetricEncryption;
 import cn.edu.pku.ss.crypto.abe.CPABEImpl;
 import cn.edu.pku.ss.crypto.abe.CPABEImplWithoutSerialize;
 import cn.edu.pku.ss.crypto.abe.Ciphertext;
@@ -21,9 +24,7 @@ import cn.edu.pku.ss.crypto.abe.PublicKey;
 import cn.edu.pku.ss.crypto.abe.SecretKey;
 import cn.edu.pku.ss.crypto.abe.serialize.SerializeUtils;
 import cn.edu.pku.ss.crypto.aes.AES;
-
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
+import it.unisa.dia.gas.jpbc.Element;
 
 public class Client {
 	private PublicKey PK;
@@ -70,7 +71,26 @@ public class Client {
 		CPABEImplWithoutSerialize.enc(in, p, this.PK, outputFileName);
 	}
 	
-	public void dec(File in){
+	public void dec(File in) {
+		dec(in, "SM4");
+	}
+	
+	public void dec(File in, String algorithm){
+		ISymmetricEncryption engine = null;
+		switch(algorithm) {
+		case "AES": 
+			 engine = new AES();
+			break;
+		case "SM4":
+			engine = new SM4Engine();
+			break;
+		default:
+			engine = new SM4Engine();
+			break;
+		}
+		dec(in, engine);
+	}
+	public void dec(File in, ISymmetricEncryption engine){
 		String ciphertextFileName = null; 
 		DataInputStream dis = null;
 		try {
@@ -99,7 +119,7 @@ public class Client {
 			e.printStackTrace();
 		}
 		Element m = CPABEImpl.dec(ciphertext, SK, PK);
-		AES.crypto(Cipher.DECRYPT_MODE, dis, os, m);
+		engine.crypto(Cipher.DECRYPT_MODE, dis, os, m);
 	}
 	
 	public void serializePK(File f){
