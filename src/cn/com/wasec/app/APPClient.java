@@ -69,6 +69,8 @@ public class APPClient extends JFrame {
 		JButton btnNewButton = new JButton("update");
 		btnNewButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				AAA aaa = new AAA();
+				aaa.setVisible(true);
 			}
 		});
 		btnNewButton.setBounds(31, 229, 93, 23);
@@ -85,6 +87,7 @@ public class APPClient extends JFrame {
 		JButton btnNewButton_2 = new JButton("...");
 		btnNewButton_2.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				
 			}
 		});
 		btnNewButton_2.setBounds(195, 102, 93, 23);
