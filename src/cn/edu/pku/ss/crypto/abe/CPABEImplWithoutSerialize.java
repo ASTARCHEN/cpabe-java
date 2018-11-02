@@ -17,14 +17,15 @@ import com.alibaba.fastjson.JSONObject;
 
 import cn.com.wasec.SM4Engine;
 import cn.com.wasec.impl.ISymmetricEncryption;
+import cn.edu.pku.ss.crypto.abe.serialize.Serializable;
 import cn.edu.pku.ss.crypto.abe.serialize.SerializeUtils;
+import cn.edu.pku.ss.crypto.abe.serialize.SimpleSerializable;
 import cn.edu.pku.ss.crypto.aes.AES;
 import it.unisa.dia.gas.jpbc.Element;
 import it.unisa.dia.gas.jpbc.Pairing;
-import ltd.snowland.utils.StreamTool;
 public class CPABEImplWithoutSerialize {
 	static Pairing pairing = PairingManager.defaultPairing;
-	public static class KeyPair{
+	public static class KeyPair implements SimpleSerializable{
 		PublicKey PK;
 		MasterKey MK;
 		public PublicKey getPK() {
@@ -34,7 +35,15 @@ public class CPABEImplWithoutSerialize {
 		public MasterKey getMK() {
 			return MK;
 		}
-
+		
+		public void setPK(PublicKey pk) {
+			this.PK =pk;
+		}
+		
+		public void setMK(MasterKey mk) {
+			this.MK = mk;
+		}
+		
 		public String getPKJSONString(){
 			JSONObject json = new JSONObject();
 			byte[] b = SerializeUtils.convertToByteArray(this.PK);

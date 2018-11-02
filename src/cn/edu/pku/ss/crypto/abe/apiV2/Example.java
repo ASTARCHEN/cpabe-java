@@ -5,9 +5,9 @@ import java.io.File;
 public class Example {
 	public static void main(String[] args) {
 		Server server = new Server();
-		Client PKUClient = new Client(new String[] { "PKU", "Student" });
-		Client THUClient = new Client(new String[] { "THU", "Student" });
-		Client TeacherClient = new Client(new String[] { "PKU", "Teacher" });
+		Client PKUClient = new Client(new String[] { "部门A", "职位A" });
+		Client THUClient = new Client(new String[] { "部门A", "职位B" });
+		Client TeacherClient = new Client(new String[] { "部门B", "职位A" });
 		// client��server����ȡ��Կ�ַ���
 		String PKJSONString = server.getPublicKeyInString();
 		PKUClient.setPK(PKJSONString);
@@ -24,20 +24,13 @@ public class Example {
 		SKJSONString = server.generateSecretKey(TeacherClient.getAttrs());
 		TeacherClient.setSK(SKJSONString);
 
-		// ����
-		String outputFileName = "test.cpabe";
+		String outputFileName = "test.nst";
 		File in = new File("README.md");
-		String policy = "Student"; // Student OR Teacher
+		String policy = "部门A"; // Student OR Teacher
 		PKUClient.enc(in, policy, outputFileName);
 
-		// ����
 		in = new File(outputFileName);
-		// THUClient.dec(in);
-//		try {
-//			TeacherClient.dec(in);
-//		} catch (Exception e) {
-//			System.out.println("ERROR");
-//		}
+
 		try {
 			THUClient.dec(in);
 		} catch (Exception e) {
